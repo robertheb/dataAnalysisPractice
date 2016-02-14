@@ -38,7 +38,7 @@ Ejemplo que muestra el código y los resultados después de cada línea de códi
 
 ```{r dirtrabajo, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE}
 getwd()
-setwd("/Users/imim/Documents/Docu13/Master-BigData-UPSA/UPSA.Analisis_datos_con_R")
+setwd("/Users/imim/Documents/Docu13/Master-BigData-UPSA/UPSA.Analisis_datos_con_R/Practica")
 getwd()
 ```
 

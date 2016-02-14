@@ -16,9 +16,9 @@ PURPOSE: Report answering some questions about "activity" data
 
 DATA SOURCE: https://archive.ics.uci.edu/ml/machine-learning-databases/00320/student.zip
 
-INPUT DATA: 
+INPUT DATA: student-por.csv, student-mat.csv
 
-LIMITATIONS: 
+LIMITATIONS: ./datosExample directory must exists
 
 EXECUTION: processing the R markdown file with knit2html() function in R
              (from the knitr package) by running the function within Rstudio

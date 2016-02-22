@@ -12,13 +12,13 @@ DATE: 14/02/2016
 
 OUTPUT: dataAnalysisPractice.md, dataAnalysisPractice.html files plus figures directory with the images 
 
-PURPOSE: Report answering some questions about "activity" data
+PURPOSE: Report answering some questions about portuguese and maths student data
 
 DATA SOURCE: https://archive.ics.uci.edu/ml/machine-learning-databases/00320/student.zip
 
 INPUT DATA: student-por.csv, student-mat.csv
 
-LIMITATIONS: ./datosExample directory must exists
+LIMITATIONS:
 
 EXECUTION: processing the R markdown file with knit2html() function in R
              (from the knitr package) by running the function within Rstudio

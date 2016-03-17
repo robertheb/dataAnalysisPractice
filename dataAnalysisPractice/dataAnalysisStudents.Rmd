@@ -1,0 +1,165 @@
+---
+title: "dataAnalysisR"
+author: "Roberto Martin Grande"
+date: "16 de marzo de 2016"
+output: html_document
+---
+
+```{r, message=FALSE}
+library(knitr)
+library(reshape)
+library(gplots)
+library(dplyr)
+library(graphics)
+```
+
+
+Abrimos los ficheros de portugues y matematicas
+```{r}
+con <- file("./student/student-por.csv","r")
+con2 <- file("./student/student-mat.csv","r")
+studentPor <- read.csv2(con)
+studentMat <- read.csv2(con2)
+```
+
+Estudiantes portugues:
+```{r}
+kable(head(studentPor[]))
+```
+
+Estudiantes matematicas:
+```{r}
+kable(head(studentMat[]))
+```
+
+Para facilitar utilizar la tabla ponemos el nombre de las columnas en mayusculas
+```{r}
+names(studentMat) <- tolower(names(studentMat))
+names(studentPor) <- tolower(names(studentPor))
+kable(head(studentMat[]))
+kable(head(studentPor[]))
+```
+
+Comprobamos si hay underescores en las columas de estudiantes de portugues y matematicas
+
+```{r}
+length(grep("_",studentPor$mjob))
+length(grep("_",studentPor$fjob))
+
+length(grep("_",studentMat$mjob))
+length(grep("_",studentMat$fjob))
+```
+
+Como hemos visto que hay algunos datos contienen '_' por lo que vamos a quitarlas
+```{r}
+studentPor$mjob[1:20]
+studentPor$mjob <- gsub("_","",studentPor$mjob)
+studentPor$fjob <- gsub("_","",studentPor$fjob)
+studentPor$mjob[1:20]
+studentPor$fjob[1:20]
+```
+
+Ahora hacemos lo mismo para los estudiantes de matematicas:
+```{r}
+studentMat$mjob[1:20]
+studentMat$mjob <- gsub("_","",studentMat$mjob)
+studentMat$fjob <- gsub("_","",studentMat$fjob)
+studentMat$mjob[1:20]
+studentMat$fjob[1:20]
+```
+
+Volvemos a comprobar si sigue habiendo underscores
+
+```{r}
+length(grep("_",studentPor$mjob))
+length(grep("_",studentPor$fjob))
+
+length(grep("_",studentMat$mjob))
+length(grep("_",studentMat$fjob))
+```
+
+
+Ahora queremos saber que estudiantes tienen las dos asignaturas, para eso hacemos un merge (Con all=FALSE indicamos que solo se unan los alumnos que esten en los dos data.frames). Nos quedaremos unicamente con los alumnos que tenan igual los campos que tenemos en el by.
+```{r}
+studentMatPor <- merge(studentMat,studentPor,
+                       by=c("school","sex","age",
+                            "address","famsize",
+                            "pstatus","medu",
+                            "fedu","mjob",
+                            "fjob","reason",
+                            "nursery","internet"), 
+                       all=FALSE,
+                       suffixes=c("mat","por"))
+
+kable(head(studentMatPor[]))
+dim(studentMatPor)
+```
+
+Ordenamos los datos de studentMatPor por famsize y por edad:
+```{r}
+studentMatPor2 <- studentMatPor[order(
+        xtfrm(studentMatPor[,5]),studentMatPor[,3]), ]
+
+studentMatPor2[1:15, 1:5]
+```
+
+Para ordenar por famsize de forma decreciente, es necesario hacer un relevel, para que LE3 aparezca antes que GE3, es decir LE3 que son familia con igual o menos de 3 personas y GE3 que son familias con mas de 3 personas.
+```{r}
+studentMatPor2$famsize <- relevel(studentMatPor2$famsize,ref="LE3")
+studentMatPor2 <- studentMatPor[order(
+        xtfrm(studentMatPor[,5]),studentMatPor[,3]), ]
+
+studentMatPor2[1:15, 1:5]
+```
+
+Calculamos la nota media del tercer periodo dependiendo del sexo y de si tienen una relación.
+```{r}
+mediaRomantic <- cast(studentMat, sex~romantic, mean, value=c("g3")) 
+mediaRomantic
+```
+
+Gracias a esto, podemos darnos cuenta que tanto los chicos como las chicas que no estan en una relación sacan mejores notas que los que tienen una relación.
+
+
+Transformando los datos:
+
+Vamos a crear variables.
+En éste caso vamos a crear una nueva bariable que es techm, ésta variable tendra TRUE si el trabajo de la madre mjob es other o services y sino FALSE.
+```{r}
+studentPorTechM <- studentPor
+studentPorTechM$techm <- studentPorTechM$mjob %in% c("other","services")
+table(studentPorTechM$techm)
+```
+Podemos ver que hay 255 mujeres que no trabajan en other ni en services y 394 que si.
+
+Para calcular la media de los alumnos de matemáticas en el tercer periodo dependiendo del trabajo de sus padres utilizamos las funciones split() para agrupar los trabajos de los padres, y luego la función sapply() para apalicar la función mean().
+La función mean lo que hace es calcula la media del tercer periodo de cada grupo de divideFjob: function(x) mean(x$g3)
+```{r, warning=FALSE}
+divideFjob <- split(studentMat, studentMat$fjob)
+textplot(sapply(divideFjob, function(x) mean(x$g3)), mar=c(0,0,0,0), cex=0.8,fixed.width=TRUE)
+```
+
+Para selecionar de un data.frame, en nuestro caso el de estudiantes de matemáticas, las columnas de school y g3 utilizamos select, que está dentro de la librería dplyr:
+```{r}
+head(select(studentMat, school, g3))
+```
+Podemos utilizar el operador  pipe %>%
+```{r}
+head(studentMat %>% select(school,g3))
+```
+
+Análisis exploratorio.
+
+Queremos saber si hay algun alumno de matemáticas que haya sacado un 20 en el tercer periodo:
+```{r}
+any(studentMat$g3 == 20)
+```
+
+Podemos utilizar varios tipos de plot para representar los datos, por ejemplo con graphics queremos saber el numero de ausencias de los alumnos dependiendo de su nota, y separados por colegio:
+```{r}
+par(mfrow = c(1, 2), mar = c(5, 4, 2, 1))
+with(subset(studentMat, school == "GP"),
+     plot(absences, g3, main = "GP", pch=20))
+with(subset(studentMat, school == "MS"),
+     plot(absences, g3, main = "MS", pch=20))
+```
